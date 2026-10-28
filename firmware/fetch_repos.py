@@ -29,15 +29,17 @@ def clone_or_update_repo(
             if os.path.isabs(patch_path)
             else os.path.join(os.getcwd(), patch_path)
         )
-        # 使用 git apply --check 先检测补丁是否能应用，避免报错
-        check_result = subprocess.run(
-            ["git", "-C", path, "apply", "--check", patch_full_path]
-        )
-        if check_result.returncode == 0:
-            subprocess.run(["git", "-C", path, "apply", patch_full_path], check=True)
+        # Windows checkouts can have CRLF line endings. Ignore whitespace while
+        # applying the upstream patch and fail rather than build unpatched code.
+        base = ["git", "-C", path, "apply", "--ignore-whitespace"]
+        if subprocess.run(base + ["--check", patch_full_path], capture_output=True).returncode == 0:
+            subprocess.run(base + [patch_full_path], check=True)
             print(f"Applied patch {patch_path} to {path}")
+        elif subprocess.run(base + ["--reverse", "--check", patch_full_path], capture_output=True).returncode == 0:
+            print(f"Patch {patch_path} already applied to {path}")
         else:
-            print(f"Patch {patch_path} cannot be applied cleanly to {path}, skipped.")
+            raise RuntimeError(f"Patch {patch_path} cannot be applied to {path}")
+
 
 
 def fetch_dependencies():

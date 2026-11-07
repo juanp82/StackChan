@@ -17,14 +17,12 @@ jobs:
       - run: pip install platformio
       - run: pio run -d prueba_cam
       - run: |
-          mkdir firmware
-          cp prueba_cam/.pio/build/camera/firmware.bin firmware/TimerCam_X_aplicacion.bin
-          cp prueba_cam/.pio/build/viewer/firmware.bin firmware/Cardputer_ADV_aplicacion.bin
-          cp prueba_cam/.pio/build/camera/bootloader.bin firmware/TimerCam_X_bootloader.bin
-          cp prueba_cam/.pio/build/camera/partitions.bin firmware/TimerCam_X_partitions.bin
-          cp prueba_cam/.pio/build/viewer/bootloader.bin firmware/Cardputer_ADV_bootloader.bin
-          cp prueba_cam/.pio/build/viewer/partitions.bin firmware/Cardputer_ADV_partitions.bin
+          mkdir prueba-resultados
+          TOOL="$HOME/.platformio/packages/tool-esptoolpy/esptool.py"
+          BOOT="$HOME/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin"
+          python "$TOOL" --chip esp32 merge_bin -o prueba-resultados/TimerCam_X.bin --flash_mode dio --flash_freq 40m --flash_size 4MB 0x1000 prueba_cam/.pio/build/camera/bootloader.bin 0x8000 prueba_cam/.pio/build/camera/partitions.bin 0xe000 "$BOOT" 0x10000 prueba_cam/.pio/build/camera/firmware.bin
+          python "$TOOL" --chip esp32s3 merge_bin -o prueba-resultados/Cardputer_ADV.bin --flash_mode dio --flash_freq 80m --flash_size 8MB 0x0 prueba_cam/.pio/build/viewer/bootloader.bin 0x8000 prueba_cam/.pio/build/viewer/partitions.bin 0xe000 "$BOOT" 0x10000 prueba_cam/.pio/build/viewer/firmware.bin
       - uses: actions/upload-artifact@v4
         with:
           name: firmware-timercam-cardputer
-          path: firmware/
+          path: prueba-resultados/

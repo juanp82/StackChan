@@ -34,7 +34,17 @@ void setup() {
   WiFi.mode(WIFI_AP);
   if (!WiFi.softAP("TimerCam-Prueba", "Camara2026")) { Serial.println("AP failed"); return; }
   server.on("/jpg", HTTP_GET, snapshot);
-  server.on("/", HTTP_GET, [](){ server.send(200, "text/html", "<h2>TimerCam</h2><img src='/jpg'>"); });
+  server.on("/", HTTP_GET, [](){ server.send(200, "text/html", "<meta name='viewport' content='width=device-width'><h2>TimerCam</h2><img src='/jpg'><form method='POST' action='/off' onsubmit=\"return confirm('Apagar camara?')\"><p><button type='submit'>Apagar camara</button></p></form>"); });
+  server.on("/off", HTTP_POST, [](){
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/plain", "Apagando. Desconecta USB para apagar por completo.");
+    delay(250);
+    WiFi.softAPdisconnect(true);
+    WiFi.mode(WIFI_OFF);
+    digitalWrite(33, LOW); // release the TimerCam battery power latch
+    delay(200);
+    esp_deep_sleep_start(); // external USB may still supply power
+  });
   server.begin();
   Serial.println(WiFi.softAPIP());
 }

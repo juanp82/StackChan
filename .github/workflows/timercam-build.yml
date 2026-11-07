@@ -1,0 +1,30 @@
+name: Prueba TimerCam y Cardputer
+on:
+  push:
+    branches: [prueba-timercam-cardputer-adv]
+  pull_request:
+    branches: [main]
+    paths: ['prueba_cam/**', '.github/workflows/timercam-build.yml']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install platformio
+      - run: pio run -d prueba_cam
+      - run: |
+          mkdir firmware
+          cp prueba_cam/.pio/build/camera/firmware.bin firmware/TimerCam_X_aplicacion.bin
+          cp prueba_cam/.pio/build/viewer/firmware.bin firmware/Cardputer_ADV_aplicacion.bin
+          cp prueba_cam/.pio/build/camera/bootloader.bin firmware/TimerCam_X_bootloader.bin
+          cp prueba_cam/.pio/build/camera/partitions.bin firmware/TimerCam_X_partitions.bin
+          cp prueba_cam/.pio/build/viewer/bootloader.bin firmware/Cardputer_ADV_bootloader.bin
+          cp prueba_cam/.pio/build/viewer/partitions.bin firmware/Cardputer_ADV_partitions.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-timercam-cardputer
+          path: firmware/

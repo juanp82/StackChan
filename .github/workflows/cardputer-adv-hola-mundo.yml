@@ -1,0 +1,48 @@
+name: Cardputer ADV Hola Mundo
+on:
+  push:
+    branches: [cardputer-adv-hola-mundo-build]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install platformio
+      - name: Prepare project
+        run: |
+          mkdir -p /tmp/cardputer/src
+          cat > /tmp/cardputer/platformio.ini <<'EOF'
+          [env:cardputer-adv]
+          platform = espressif32@6.7.0
+          board = esp32-s3-devkitc-1
+          framework = arduino
+          build_flags = -DESP32S3 -DARDUINO_USB_CDC_ON_BOOT=1 -DARDUINO_USB_MODE=1
+          lib_deps = https://github.com/m5stack/M5Cardputer.git
+          EOF
+          cat > /tmp/cardputer/src/main.cpp <<'EOF'
+          #include <M5Cardputer.h>
+          void setup() {
+            auto cfg = M5.config();
+            M5Cardputer.begin(cfg, true);
+            M5Cardputer.Display.setRotation(1);
+            M5Cardputer.Display.fillScreen(BLACK);
+            M5Cardputer.Display.setTextColor(WHITE, BLACK);
+            M5Cardputer.Display.setTextDatum(middle_center);
+            M5Cardputer.Display.setTextSize(3);
+            M5Cardputer.Display.drawString("Hola mundo", M5Cardputer.Display.width()/2, M5Cardputer.Display.height()/2);
+          }
+          void loop() { M5Cardputer.update(); delay(20); }
+          EOF
+      - run: pio run -d /tmp/cardputer
+      - name: Merge firmware
+        run: |
+          python ~/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32s3 merge_bin -o /tmp/cardputer/hola-mundo-cardputer-adv.bin --flash_mode dio --flash_freq 80m --flash_size 8MB 0x0000 /tmp/cardputer/.pio/build/cardputer-adv/bootloader.bin 0x8000 /tmp/cardputer/.pio/build/cardputer-adv/partitions.bin 0xe000 ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin 0x10000 /tmp/cardputer/.pio/build/cardputer-adv/firmware.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hola-mundo-cardputer-adv
+          path: /tmp/cardputer/hola-mundo-cardputer-adv.bin

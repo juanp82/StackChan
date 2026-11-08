@@ -1,0 +1,23 @@
+name: Laboratorio sensores Cardputer ADV
+on:
+  push:
+    branches: [laboratorio-sensores-cardputer]
+  pull_request:
+    branches: [main]
+    paths: ['laboratorio/**', '.github/workflows/laboratorio-build.yml']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install platformio
+      - run: pio run -d laboratorio
+      - run: mkdir -p lab-output && cp laboratorio/.pio/build/cardputer/firmware.bin lab-output/Laboratorio_Sensores_ADV_M5Launcher.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: laboratorio-sensores
+          path: lab-output/

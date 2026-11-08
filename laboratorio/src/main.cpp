@@ -74,7 +74,7 @@ void setup(){
  auto cfg=M5.config();M5Cardputer.begin(cfg,true);M5Cardputer.Display.setRotation(1);
  if(M5Cardputer.Display.width() < M5Cardputer.Display.height()) M5Cardputer.Display.setRotation(2);
  M5Cardputer.Display.setBrightness(190);
- cv.createSprite(240,135);cv.setTextWrap(false);
+ cv.createSprite(M5Cardputer.Display.width(),M5Cardputer.Display.height());cv.setTextWrap(false);
  pinMode(REDPIN,INPUT);pinMode(BLUEPIN,INPUT);
  prefs.begin("sensorlab",false);int next=prefs.getInt("next",0);prefs.putInt("next",0);
  if(next>=1 && next<=3)activate(next);else mode=0;
@@ -85,6 +85,11 @@ void loop(){
  if(M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isPressed()){
   auto keys=M5Cardputer.Keyboard.keysState();
   for(char c:keys.word){
+   if(c=='r'||c=='R') {
+    int r=M5Cardputer.Display.getRotation();
+    for(int n=0;n<4;n++){r=(r+1)%4; M5Cardputer.Display.setRotation(r); if(M5Cardputer.Display.width() > M5Cardputer.Display.height()) break;}
+    M5Cardputer.Display.fillScreen(LAB_BG); draw(); continue;
+   }
    if(locked)continue;
    if((c=='i'||c=='I')){page=!page;draw();}
    if((c=='m'||c=='M') && mode){safePins();mode=0;page=0;draw();}

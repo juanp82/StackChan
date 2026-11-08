@@ -71,7 +71,9 @@ void activate(int m){
  if(m==2){Wire.setTimeOut(50); bool q=qmp.begin(&Wire,QMP6988_SLAVE_ADDRESS_L,2,1,100000U);bool s=sht.begin(&Wire,SHT3X_I2C_ADDR,2,1,100000U);envOK=q&&s;}
 }
 void setup(){
- auto cfg=M5.config();M5Cardputer.begin(cfg,true);M5Cardputer.Display.setRotation(1);M5Cardputer.Display.setBrightness(190);
+ auto cfg=M5.config();M5Cardputer.begin(cfg,true);M5Cardputer.Display.setRotation(1);
+ if(M5Cardputer.Display.width() < M5Cardputer.Display.height()) M5Cardputer.Display.setRotation(2);
+ M5Cardputer.Display.setBrightness(190);
  cv.createSprite(240,135);cv.setTextWrap(false);
  pinMode(REDPIN,INPUT);pinMode(BLUEPIN,INPUT);
  prefs.begin("sensorlab",false);int next=prefs.getInt("next",0);prefs.putInt("next",0);
